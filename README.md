@@ -7,6 +7,11 @@ Comparative Analysis of Simulated vs. Non-Simulated Transportability
 Caiwei Xiong 
 
 
+# Dataset
+
+The `Framingham` dataset, accessible through the `RiskCommunicator` package, originates from the renowned Framingham Heart Study. This dataset is pivotal in cardiovascular research, offering extensive data on risk factors associated with heart disease. It includes a variety of variables such as cholesterol levels, blood pressure, diabetes status, smoking habits, and other relevant health indicators. The dataset's longitudinal design, tracking participants over an extended period, allows for in-depth analysis of cardiovascular disease progression and risk factor evolution. The Framingham study's contribution through this dataset has been instrumental in shaping our understanding of heart disease, influencing preventive measures and treatment strategies worldwide. The dataset's comprehensive nature and historical significance make it a cornerstone in the field of cardiovascular research and risk assessment.
+
+
 # Packages
 
 All code contained within the R Markdown (Rmd) file is compatible with R version 4.2.1 and can be successfully compiled. The following part lists the packages and their corresponding versions that will be used:
