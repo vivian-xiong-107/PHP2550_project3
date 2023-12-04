@@ -9,6 +9,8 @@ Caiwei Xiong
 
 # Packages
 
+All code contained within the R Markdown (Rmd) file is compatible with R version 4.2.1 and can be successfully compiled. The following part lists the packages and their corresponding versions that will be used:
+
 nhanesA (0.7.4)
 
 riskCommunicator (1.0.1)
