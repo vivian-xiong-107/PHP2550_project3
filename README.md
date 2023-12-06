@@ -8,17 +8,17 @@ Caiwei Xiong
 
 ## Abstract 
 
-**Background:**
+**Background:** Transportability analyses are designed to extend inferences from a specific source population to a distinct target demographic. These analyses are crucial for decision-makers, as they leverage findings from controlled trials to estimate the anticipated average benefit within a real-world population. This process employs advanced statistical methods to reconcile differences between populations, ensuring that the derived conclusions are pertinent and accurately represent the potential outcomes within the target group.
 
 
-**Methods:**
+**Methods:** 
 
 
 **Results:**
 
 
 **Conclusions:**
-Transportability analyses are designed to extend inferences from a specific source population to a distinct target demographic. These analyses are crucial for decision-makers, as they leverage findings from controlled trials to estimate the anticipated average benefit within a real-world population. This process employs advanced statistical methods to reconcile differences between populations, ensuring that the derived conclusions are pertinent and accurately represent the potential outcomes within the target group. In this report, we trained a logistic regression model using data from the `Framingham` study (source dataset) and subsequently applied this model to both non-nested datasets. (i.e., the `NHANES` dataset and a `simulated` dataset). Our findings reveal that the simulated dataset achieved a more favorable Brier score compared to the NHANES dataset. This suggests that the simulated dataset more closely resembles the Framingham study in terms of essential characteristics or risk factor profiles. Such insights are invaluable for future endeavors in model development and refinement, underscoring the need for predictive models that are not only precise in their original context but also retain their accuracy and applicability across diverse population groups.
+In this report, we trained a logistic regression model using data from the `Framingham` study (source dataset) and subsequently applied this model to both non-nested datasets. (i.e., the `NHANES` dataset and a `simulated` dataset). Our findings reveal that the simulated dataset achieved a more favorable Brier score compared to the NHANES dataset. This suggests that the simulated dataset more closely resembles the Framingham study in terms of essential characteristics or risk factor profiles. Such insights are invaluable for future endeavors in model development and refinement, underscoring the need for predictive models that are not only precise in their original context but also retain their accuracy and applicability across diverse population groups.
 
 ## Dataset
 
