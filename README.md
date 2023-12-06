@@ -11,14 +11,13 @@ Caiwei Xiong
 **Background:** Transportability analyses are designed to extend inferences from a specific source population to a distinct target demographic. These analyses are crucial for decision-makers, as they leverage findings from controlled trials to estimate the anticipated average benefit within a real-world population. This process employs advanced statistical methods to reconcile differences between populations, ensuring that the derived conclusions are pertinent and accurately represent the potential outcomes within the target group.
 
 
-**Methods:** In this report, we trained a logistic regression model using data from the `Framingham` study (source dataset) and subsequently applied this model to both non-nested datasets. (i.e., the `NHANES` dataset and a `simulated` dataset). Our findings reveal that the simulated dataset achieved a more favorable Brier score compared to the NHANES dataset.
+**Methods:** Using summary statistics from the National Health and Nutrition Examination Survey (`NHANES`) and a range of correlation parameters, we generated data for a simulated target population. We then conducted transportability analyses on each dataset to calculate the model's Brier score and Area Under the Curve (AUC). For each correlation scenario, we compared the bias of these estimates against the Brier score and AUC derived from individual-level NHANES data.
 
 
-**Results:**
+**Results:** In our transportability analyses, which utilized simulated datasets, we observed relative biases ranging from -0.05 to 1.5 when compared to estimates obtained from individual-level data. Adjustments in the degree of association between specific simulated variables indicated potential for performance improvement. However, it's noteworthy that simulations assuming no associations did not show substantial differences. This finding suggests that the assumed inter-variable associations may have a limited impact on the accuracy of our transportability analyses.
 
 
-**Conclusions:**
-This suggests that the simulated dataset more closely resembles the Framingham study in terms of essential characteristics or risk factor profiles. Such insights are invaluable for future endeavors in model development and refinement, underscoring the need for predictive models that are not only precise in their original context but also retain their accuracy and applicability across diverse population groups.
+**Conclusions:** The observation of low relative biases in our study supports the validity of using simulated data for transportability analysis, particularly in estimating Brier scores and Area Under the Curve (AUC) for a target population when individual-level data is unavailable. Furthermore, our findings indicate that researchers can simplify the process of simulating target data by assuming no association between covariates, without significantly compromising the accuracy of the results. This approach could offer a more straightforward and accessible method for conducting such analyses.
 
 ## Dataset
 
