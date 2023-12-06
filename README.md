@@ -21,7 +21,7 @@ Caiwei Xiong
 
 ## Dataset
 
-The `NHANES` (National Health and Nutrition Examination Survey) package, offers a comprehensive collection of data pertaining to blood pressure measurements. This dataset is instrumental in understanding various health aspects related to blood pressure across a diverse population. It encompasses a wide range of variables, including systolic and diastolic blood pressure readings, which are crucial for medical research and public health analysis. The data, derived from a nationally representative sample, provides insights into the prevalence and distribution of blood pressure-related health conditions in the U.S. population. The NHANES survey's rigorous methodology ensures the reliability and accuracy of dataset, making it a valuable resource for epidemiologists, public health officials, and researchers in related fields.
+The `NHANES` package, offers a comprehensive collection of data pertaining to blood pressure measurements. This dataset is instrumental in understanding various health aspects related to blood pressure across a diverse population. It encompasses a wide range of variables, including systolic and diastolic blood pressure readings, which are crucial for medical research and public health analysis. The data, derived from a nationally representative sample, provides insights into the prevalence and distribution of blood pressure-related health conditions in the U.S. population. The NHANES survey's rigorous methodology ensures the reliability and accuracy of dataset, making it a valuable resource for epidemiologists, public health officials, and researchers in related fields.
 
 
 
