@@ -66,5 +66,5 @@ The codes for the codes for construct report was stored in: `proejct3.Rmd`
 
 ## Acknowledgement
 
-This project represents a collaborative effort, involving Dr. Jon Steingrimsson in the Biostatistics Department (jon_steingrimsson@brown.edu), and is under the guidance of Dr. Alice Paul (alice_paul@brown.edu)."
+This project represents a collaborative effort, involving Dr. Jon Steingrimsson in the Biostatistics Department (jon_steingrimsson@brown.edu), and is under the guidance of Dr. Alice Paul (alice_paul@brown.edu).
 
