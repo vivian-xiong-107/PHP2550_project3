@@ -8,7 +8,7 @@ Caiwei Xiong
 
 ## Abstract 
 
-**Background:** Transportability analyses are designed to extend inferences from a specific source population to a distinct target demographic. These analyses are crucial for decision-makers, as they leverage findings from controlled trials to estimate the anticipated average benefit within a real-world population. This process employs advanced statistical methods to reconcile differences between populations, ensuring that the derived conclusions are pertinent and accurately represent the potential outcomes within the target group.
+**Background:** Risk prediction models, like the Framingham ATP-III model for cardiovascular disease, play a pivotal role in clinical decision-making. However, their effectiveness can be compromised when applied to populations with distinct characteristics. To address this, transportability analysis techniques have been developed to fine-tune model performance to account for demographic differences. Yet, these techniques often depend on individual-level data from the target population, which may not always be accessible. In this context, simulating target population data using summary statistics emerges as a potential solution to this challenge.
 
 
 **Methods:** Using summary statistics from the National Health and Nutrition Examination Survey (`NHANES`) and a range of correlation parameters, we generated data for a simulated target population. We then conducted transportability analyses on each dataset to calculate the model's Brier score and Area Under the Curve (AUC). For each correlation scenario, we compared the bias of these estimates against the Brier score and AUC derived from individual-level NHANES data.
