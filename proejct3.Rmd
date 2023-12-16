@@ -23,11 +23,19 @@ library("gtsummary")
 library("ggplot2")
 library("gt")
 library("MASS")
+library("gridExtra")
+library("dglm")
 ```
 
 ## Abstract
 
-Transportability analyses are designed to extend inferences from a specific source population to a distinct target demographic. These analyses are crucial for decision-makers, as they leverage findings from controlled trials to estimate the anticipated average benefit within a real-world population. This process employs advanced statistical methods to reconcile differences between populations, ensuring that the derived conclusions are pertinent and accurately represent the potential outcomes within the target group. In this report, we trained a logistic regression model using data from the Framingham study (source dataset) and subsequently applied this model to both non-nested datasets. (\textit{i.e.,} the NHANES dataset and a simulated dataset). Our findings reveal that the simulated dataset achieved a more favorable Brier score compared to the NHANES dataset. This suggests that the simulated dataset more closely resembles the Framingham study in terms of essential characteristics or risk factor profiles. Such insights are invaluable for future endeavors in model development and refinement, underscoring the need for predictive models that are not only precise in their original context but also retain their accuracy and applicability across diverse population groups.
+**Background:** Risk prediction models, like the Framingham ATP-III model for cardiovascular disease, play a pivotal role in clinical decision-making. However, their effectiveness can be compromised when applied to populations with distinct characteristics. To address this, transportability analysis techniques have been developed to fine-tune model performance to account for demographic differences. Yet, these techniques often depend on individual-level data from the target population, which may not always be accessible. In this context, simulating target population data using summary statistics emerges as a potential solution to this challenge.
+
+**Methods:** Using summary statistics from the National Health and Nutrition Examination Survey (NHANES) and a range of correlation parameters, we generated data for a simulated target population. We then conducted transportability analyses on each dataset to calculate the model's Brier score and Area Under the Curve (AUC). For each correlation scenario, we compared the bias of these estimates against the Brier score and AUC derived from individual-level NHANES data.
+
+**Results:** In our transportability analyses, which utilized simulated datasets, we observed relative biases ranging from -0.05 to 1.5 when compared to estimates obtained from individual-level data. Adjustments in the degree of association between specific simulated variables indicated potential for performance improvement. However, it's noteworthy that simulations assuming no associations did not show substantial differences. This finding suggests that the assumed inter-variable associations may have a limited impact on the accuracy of our transportability analyses.
+
+**Conclusions:** The observation of low relative biases in our study supports the validity of using simulated data for transportability analysis, particularly in estimating Brier scores and Area Under the Curve (AUC) for a target population when individual-level data is unavailable. Furthermore, our findings indicate that researchers can simplify the process of simulating target data by assuming no association between covariates, without significantly compromising the accuracy of the results. This approach could offer a more straightforward and accessible method for conducting such analyses.
 
 \newpage
 
@@ -36,14 +44,17 @@ Transportability analyses are designed to extend inferences from a specific sour
 Transportability analysis plays a pivotal role in epidemiological and statistical research, particularly when examining the applicability of findings from one population to another. This analysis is crucial in understanding how a model, developed in a specific setting or based on a particular dataset, performs when applied to different populations. Our study embarks on this exploration by comparing outcomes between simulated and non-simulated datasets. The simulated dataset, crafted through sophisticated statistical techniques, aims to mirror the characteristics of a real-world population, providing an invaluable tool for assessing model robustness and transportability without compromising individual privacy. On the other hand, the non-simulated dataset, derived from actual population data, offers insights grounded in real-world scenarios. By juxtaposing these two datasets in a transportability analysis framework, we aim to uncover the strengths and limitations of predictive models across varied contexts, enhancing our understanding of their generalizability and utility in diverse epidemiological landscapes.
 
 ## Motivation datasets
-
-The \texttt{NHANES} (National Health and Nutrition Examination Survey) package, offers a comprehensive collection of data pertaining to blood pressure measurements. This dataset is instrumental in understanding various health aspects related to blood pressure across a diverse population. It encompasses a wide range of variables, including systolic and diastolic blood pressure readings, which are crucial for medical research and public health analysis. The data, derived from a nationally representative sample, provides insights into the prevalence and distribution of blood pressure-related health conditions in the U.S. population. The NHANES survey's rigorous methodology ensures the reliability and accuracy of dataset, making it a valuable resource for epidemiologists, public health officials, and researchers in related fields. [@nhanesA] To construct a comprehensive dataset from the \texttt{NHANES} package that includes information on blood pressure, demographics, BMI, smoking status, and hypertension medication, we employed a multi-step process using R. We began by extracting systolic and diastolic blood pressure measurements from the "\texttt{BPX\_J}" dataset, assigning new variable names \texttt{SYSBP} and \texttt{DIABP} for clarity. Demographic details such as sex and age were then retrieved from the "\texttt{DEMO\_J}" dataset and labeled accordingly. BMI values were sourced from the "\texttt{BMX\_J}" dataset. For smoking status, the "\texttt{SMQ\_J}" dataset was queried, creating a binary indicator for current smoking status based on the responses. Similarly, hypertension medication usage was determined from the "\texttt{BPQ\_J}" dataset, with conditions applied to assign a binary status or an NA for missing data. Total cholesterol levels and HDL cholesterol data were selected from the "\texttt{TCHOL\_J}" and "\texttt{HDL\_J}" datasets and were renamed to \texttt{TOTCHOL} and \texttt{HDLC}, respectively. The diabetes status was derived from the "\texttt{DIQ\_J}" dataset, with a binary indicator being assigned based on the given conditions. The next phase involved merging these individual datasets using a full join operation on the \texttt{SEQN} identifier, ensuring that each subject's records across various health domains were aligned. Additional processing included the creation of \texttt{SYSBP\_UT}, which reflects untreated systolic blood pressure by setting the value to 0 if the subject is on hypertension medication, and \texttt{SYSBP\_T}, which captures treated systolic blood pressure with the same logic applied inversely. Finally, the \texttt{SEQN} column, which served as the unique identifier for joining the datasets, was removed to finalize the dataset. This curated dataset now serves as a rich, multi-dimensional resource for analyzing health patterns and outcomes within the NHANES cohort.
-
 The \texttt{Framingham} dataset, accessible through the \texttt{RiskCommunicator} package, originates from the renowned Framingham Heart Study. This dataset is pivotal in cardiovascular research, offering extensive data on risk factors associated with heart disease. It includes a variety of variables such as cholesterol levels, blood pressure, diabetes status, smoking habits, and other relevant health indicators. The dataset's longitudinal design, tracking participants over an extended period, allows for in-depth analysis of cardiovascular disease progression and risk factor evolution. The Framingham study's contribution through this dataset has been instrumental in shaping our understanding of heart disease, influencing preventive measures and treatment strategies worldwide. The dataset's comprehensive nature and historical significance make it a cornerstone in the field of cardiovascular research and risk assessment. [@riskCommunicator]
+
+
+The \texttt{NHANES} (National Health and Nutrition Examination Survey) package, offers a comprehensive collection of data pertaining to blood pressure measurements. This dataset is instrumental in understanding various health aspects related to medical measurements across a diverse population. It encompasses a wide range of variables, including systolic and diastolic blood pressure readings, which are crucial for medical research and public health analysis. The data, derived from a nationally representative sample, provides insights into the prevalence and distribution of blood pressure-related health conditions in the U.S. population. The NHANES survey's rigorous methodology ensures the reliability and accuracy of dataset, making it a valuable resource for epidemiologists, public health officials, and researchers in related fields. [@nhanesA] To construct a comprehensive dataset from the \texttt{NHANES} package that includes information on blood pressure, demographics, BMI, smoking status, and hypertension medication, we employed a multi-step process using R. We began by extracting systolic and diastolic blood pressure measurements from the "\texttt{BPX\_J}" dataset, assigning new variable names \texttt{SYSBP} and \texttt{DIABP} for clarity. Demographic details such as sex and age were then retrieved from the "\texttt{DEMO\_J}" dataset and labeled accordingly. BMI values were sourced from the "\texttt{BMX\_J}" dataset. For smoking status, the "\texttt{SMQ\_J}" dataset was queried, creating a binary indicator for current smoking status based on the responses. Similarly, hypertension medication usage was determined from the "\texttt{BPQ\_J}" dataset, with conditions applied to assign a binary status or an NA for missing data. Total cholesterol levels and HDL cholesterol data were selected from the "\texttt{TCHOL\_J}" and "\texttt{HDL\_J}" datasets and were renamed to \texttt{TOTCHOL} and \texttt{HDLC}, respectively. The diabetes status was derived from the "\texttt{DIQ\_J}" dataset, with a binary indicator being assigned based on the given conditions. The next phase involved merging these individual datasets using a full join operation on the \texttt{SEQN} identifier, ensuring that each subject's records across various health domains were aligned. Additional processing included the creation of \texttt{SYSBP\_UT}, which reflects untreated systolic blood pressure by setting the value to 0 if the subject is on hypertension medication, and \texttt{SYSBP\_T}, which captures treated systolic blood pressure with the same logic applied inversely. Finally, the \texttt{SEQN} column, which served as the unique identifier for joining the datasets, was removed to finalize the dataset. This curated dataset now serves as a rich, multi-dimensional resource for analyzing health patterns and outcomes within the NHANES cohort.
 
 ## Non-simulated transportability analysis
 
-This report draws upon key insights from the paper *"Transporting a prediction model for use in a new target population"*. A pivotal aspect highlighted in the paper is the flexibility of model application irrespective of its precise specification. Specifically, the authors note that their results do not hinge on the prediction model being perfectly aligned with the true conditional expectation of the outcome in the source population, denoted as $E[Y|X,S=1]$ . In other words, the model $g_{\hat{\beta}}(X)$ does not necessarily have to converge to this true conditional expectation for it to be effective in application. [@steingrimsson2022]
+This report draws upon key insights from the paper *"Transporting a prediction model for use in a new target population"*. A pivotal aspect highlighted in the paper is the flexibility of model application irrespective of its precise specification. 
+
+
+Specifically, the authors note that their results do not hinge on the prediction model being perfectly aligned with the true conditional expectation of the outcome in the source population, denoted as $E[Y|X,S=1]$ . In other words, the model $g_{\hat{\beta}}(X)$ does not necessarily have to converge to this true conditional expectation for it to be effective in application. [@steingrimsson2022]
 
 In light of this understanding, the current report will focus on utilizing the provided logistic regression model as a tool to examine the efficacy of both simulated and non-simulated transportability analyses. This approach is intended to assess the model's performance across different population settings, underscoring the practical implications of the model's transportability, as suggested by the referenced paper. Such an exploration aims to provide a comprehensive understanding of the model's applicability and robustness, particularly in scenarios where exact model specification may not align with the underlying population dynamics.
 
@@ -72,7 +83,7 @@ framingham_df <- framingham_df %>%
   dplyr::select(-c(TIMECVD))
 ```
 
-The below Table 1 presents a statistical comparison of various covariates between men and women from the Framingham dataset. Notable differences are observed across several biometric and health-related parameters. For instance, High-Density Lipoprotein Cholesterol (\texttt{HDLC}) levels are significantly higher in women (mean=53, SD=16) compared to men (mean=44, SD=13), with a p-value less than 0.001 indicating statistical significance. Total Cholesterol (\texttt{TOTCHOL}) follows a similar trend, with women exhibiting higher mean levels (246) than men (226), also with a p-value below 0.001. Cardiovascular Disease (\texttt{CVD}) prevalence shows a significant gender disparity, with 33\% of men affected versus 17\% of women, and the Body Mass Index (\texttt{BMI}) is slightly lower in women (mean=25.5, SD=4.2) than in men (mean=26.2, SD=3.5), both with p-values less than 0.001. Blood pressure medication usage (\texttt{BPMEDS}) is reported in 18% of women compared to 11\% in men, indicating a higher prevalence among the female participants. When looking at smoking status (\texttt{CURSMOKE}), a higher percentage of men (39%) reported being current smokers than women (31%). The systolic blood pressure taken at the time of the survey (\texttt{SYSBP\_T}) and the usual treatment (\texttt{SYSBP\_UT}) showed higher averages in women than men, with both parameters showing statistical significance. Diabetes prevalence (\texttt{DIABETES}) is slightly higher in men at 8.8\% compared to 6.6\% in women, with a p-value of 0.037, suggesting a modest but significant gender difference. \texttt{Age} and standard systolic blood pressure (\texttt{SYSBP}) showed no significant differences between genders, with p-values of 0.13 and 0.6, respectively. These findings suggest a distinct pattern of cardiovascular and metabolic risk factors between men and women in the dataset, highlighting the importance of gender-specific analysis.
+The below Table 1 presents a statistical comparison of various covariates between men and women from the Framingham dataset. Notable differences are observed across several biometric and health-related parameters. For instance, High-Density Lipoprotein Cholesterol (\texttt{HDLC}) levels are significantly higher in women (mean=53, SD=16) compared to men (mean=44, SD=13), with a p-value less than 0.001 indicating statistical significance. Total Cholesterol (\texttt{TOTCHOL}) follows a similar trend, with women exhibiting higher mean levels (246) than men (226), also with a p-value below 0.001. Cardiovascular Disease (\texttt{CVD}) prevalence shows a significant gender disparity, with 33% of men affected versus 17% of women, and the Body Mass Index (\texttt{BMI}) is slightly lower in women (mean=25.5, SD=4.2) than in men (mean=26.2, SD=3.5), both with p-values less than 0.001. Blood pressure medication usage (\texttt{BPMEDS}) is reported in 18% of women compared to 11% in men, indicating a higher prevalence among the female participants. When looking at smoking status (\texttt{CURSMOKE}), a higher percentage of men (39%) reported being current smokers than women (31%). The systolic blood pressure taken at the time of the survey (\texttt{SYSBP\_T}) and the usual treatment (\texttt{SYSBP\_UT}) showed higher averages in women than men, with both parameters showing statistical significance. Diabetes prevalence (\texttt{DIABETES}) is slightly higher in men at 8.8% compared to 6.6% in women, with a p-value of 0.037, suggesting a modest but significant gender difference. \texttt{Age} and standard systolic blood pressure (\texttt{SYSBP}) showed no significant differences between genders, with p-values of 0.13 and 0.6, respectively. These findings suggest a distinct pattern of cardiovascular and metabolic risk factors between men and women in the dataset, highlighting the importance of gender-specific analysis.
 
 ```{r, echo=FALSE,message=FALSE,warning=FALSE}
 framingham_df %>%
@@ -94,98 +105,85 @@ framingham_df %>%
 
 Based on the data presented in the preceding tables, a notable disparity is observed between male and female participants. To further investigate this, employing histograms can be an effective method. Histograms will enable us to delve into the empirical distribution of continuous variables across genders. The histograms provided offer a visual comparison of the distribution of key variables within the dataset, segmented by gender. A cursory analysis reveals distinct patterns in the distribution of age, systolic blood pressure (SYSBP), diastolic blood pressure (DIABP), high-density lipoprotein (HDL), body mass index (BMI), and total cholesterol (TOTCHOL) between male and female participants. The subsequent histograms specifically illustrate the data for male participants:
 
-```{r, echo=FALSE, message=FALSE, out.width="30%",warning=FALSE}
+```{r, echo=FALSE, message=FALSE, out.width="75%",warning=FALSE,fig.cap="Male's characteristics in Framingham dataset", fig.align = 'center'}
 framingham_df_male = framingham_df %>% filter(SEX == 1)
 
-par(mfrow= c(2,3))
-
-ggplot(framingham_df_male, aes(x = AGE)) + 
+p1 = ggplot(framingham_df_male, aes(x = AGE)) + 
   geom_histogram(aes(y = ..density..),
                  colour = 1, fill = "lightblue") +
-  geom_density() + 
-  labs(title="Age in framingham dataset histogram plot")
+  geom_density() 
 
-ggplot(framingham_df_male, aes(x = SYSBP)) + 
+p2 = ggplot(framingham_df_male, aes(x = SYSBP)) + 
   geom_histogram(aes(y = ..density..),
                  colour = 1, fill = "lightpink") +
-  geom_density() + 
-  labs(title="SYSBP in framingham dataset histogram plot")
+  geom_density() 
 
 
-ggplot(framingham_df_male, aes(x = DIABP)) + 
+p3 = ggplot(framingham_df_male, aes(x = DIABP)) + 
   geom_histogram(aes(y = ..density..),
                  colour = 1, fill = "orange") +
-  geom_density()  + 
-  labs(title="DIABP in framingham dataset histogram plot")
+  geom_density()  
 
-
-ggplot(framingham_df_male, aes(x = HDLC)) + 
+p4 = ggplot(framingham_df_male, aes(x = HDLC)) + 
   geom_histogram(aes(y = ..density..),
                  colour = 1, fill = "mediumpurple") +
-  geom_density() + 
-  labs(title="HDLC in framingham dataset histogram plot")
+  geom_density() 
 
 
-ggplot(framingham_df_male, aes(x = BMI)) + 
+p5 = ggplot(framingham_df_male, aes(x = BMI)) + 
   geom_histogram(aes(y = ..density..),
                  colour = 1, fill = "palegreen1") +
-  geom_density() + 
-  labs(title="BMI in framingham dataset histogram plot")
+  geom_density() 
 
 
-ggplot(framingham_df_male, aes(x = TOTCHOL)) + 
+p6 = ggplot(framingham_df_male, aes(x = TOTCHOL)) + 
   geom_histogram(aes(y = ..density..),
                  colour = 1, fill = "orchid1") +
-  geom_density() + 
-  labs(title="TOTCHOL in framingham dataset histogram plot")
+  geom_density() 
+
+grid.arrange(p1, p2, p3, p4,p5,p6, nrow = 2, ncol = 3)
 ```
 
 The series of histograms display the distribution of various health-related measurements within the Framingham dataset. Starting with age, the distribution appears approximately normal, albeit with a slight left skew, indicating a younger population. The HDLC levels are presented with a roughly symmetrical distribution around the median, suggesting a normal variance in this cohort's cholesterol levels. In contrast, both systolic and diastolic blood pressure show a right skew, indicating that higher blood pressure levels are more variably distributed than lower levels. The Body Mass Index histogram follows a normal distribution but with a noticeable right skew, which could suggest a prevalence of higher BMI values within the population. Lastly, the total cholesterol levels exhibit a right skew as well, hinting at a population with a significant range of cholesterol levels but a tendency towards higher values. These distributions provide insights into the cardiovascular health profiles of the subjects in the dataset. The subsequent histograms specifically illustrate the data for female participants:
 
-```{r, echo=FALSE, message=FALSE, out.width="30%",warning=FALSE}
+```{r, echo=FALSE, message=FALSE, out.width="75%",warning=FALSE, fig.cap="Female's characteristics in Framingham dataset",fig.align = 'center'}
 framingham_df_female = framingham_df %>% filter(SEX == 2)
 
-par(mfrow= c(2,3))
 
-ggplot(framingham_df_female, aes(x = AGE)) + 
+pp1 = ggplot(framingham_df_female, aes(x = AGE)) + 
   geom_histogram(aes(y = ..density..),
                  colour = 1, fill = "lightblue") +
-  geom_density() + 
-  labs(title="Age in framingham dataset histogram plot")
+  geom_density() 
 
-ggplot(framingham_df_female, aes(x = SYSBP)) + 
+pp2 = ggplot(framingham_df_female, aes(x = SYSBP)) + 
   geom_histogram(aes(y = ..density..),
                  colour = 1, fill = "lightpink") +
-  geom_density() + 
-  labs(title="SYSBP in framingham dataset histogram plot")
+  geom_density() 
 
 
-ggplot(framingham_df_female, aes(x = DIABP)) + 
+pp3 = ggplot(framingham_df_female, aes(x = DIABP)) + 
   geom_histogram(aes(y = ..density..),
                  colour = 1, fill = "orange") +
-  geom_density()  + 
-  labs(title="DIABP in framingham dataset histogram plot")
+  geom_density()  
 
 
-ggplot(framingham_df_female, aes(x = HDLC)) + 
+pp4 = ggplot(framingham_df_female, aes(x = HDLC)) + 
   geom_histogram(aes(y = ..density..),
                  colour = 1, fill = "mediumpurple") +
-  geom_density() + 
-  labs(title="HDLC in framingham dataset histogram plot")
+  geom_density()
 
 
-ggplot(framingham_df_female, aes(x = BMI)) + 
+pp5 = ggplot(framingham_df_female, aes(x = BMI)) + 
   geom_histogram(aes(y = ..density..),
                  colour = 1, fill = "palegreen1") +
-  geom_density() + 
-  labs(title="BMI in framingham dataset histogram plot")
+  geom_density() 
 
-
-ggplot(framingham_df_female, aes(x = TOTCHOL)) + 
+pp6 = ggplot(framingham_df_female, aes(x = TOTCHOL)) + 
   geom_histogram(aes(y = ..density..),
                  colour = 1, fill = "orchid1") +
-  geom_density() + 
-  labs(title="TOTCHOL in framingham dataset histogram plot")
+  geom_density() 
+
+grid.arrange(pp1, pp2, pp3, pp4,pp5,pp6, nrow = 2, ncol = 3)
 ```
 
 The above histograms offer a visual representation of key health indicators for female participants within the Framingham dataset. The age distribution is somewhat normally distributed but shows a slight leftward skew, indicating a younger median age within the sample. HDLC levels display a normal distribution, centralizing around the median value, which suggests a consistent range of cholesterol levels among the participants. SYSBP reveals a pronounced right skew, suggesting that higher blood pressure readings are more prevalent than lower ones among the females in the study. BMI also follows a normal distribution with a subtle right skew, pointing to a slightly higher occurrence of above-average BMI values. Lastly, TOTCHOL levels exhibit a distribution with a notable right skew, indicating variability with a tendency towards higher cholesterol levels in the population.
@@ -255,8 +253,8 @@ missing_percentage = df_2017 %>%
 
 ```{r,echo=FALSE}
 missing_percentage = missing_percentage %>% dplyr::select(-c(SEX,AGE))
-names(missing_percentage)[names(missing_percentage) == "SYSBP_UT"] <- "SYSBP UT"
-names(missing_percentage)[names(missing_percentage) == "SYSBP_T"] <- "SYSBP T"
+
+missing_percentage = missing_percentage %>% dplyr::select(-c(SYSBP_UT,SYSBP_T)) 
 ```
 
 ```{r, echo=FALSE}
@@ -309,7 +307,7 @@ train_set = framingham_df[indices, ]
 test_set = framingham_df[-indices, ]
 ```
 
-The target data, was divided into a training set and a testing set, with the training set comprising 70\% of the data and the testing set the remaining 30\%. Within the testing set, a total of 762 patients from the Framingham dataset were included, of which 577 patients did not experience cardiovascular disease during the follow-up period, and 185 patients did. Conversely, the training set consisted of 1,777 patients, also from the Framingham dataset, with 417 patients having developed cardiovascular disease during the follow-up period and 1,360 not having the condition occur. This division ensures a balanced representation of both outcomes -- occurrence and non-occurrence of cardiovascular disease during the follow-up period -- in both the training and testing datasets.
+The target data, was divided into a training set and a testing set, with the training set comprising 70% of the data and the testing set the remaining 30%. Within the testing set, a total of 762 patients from the Framingham dataset were included, of which 577 patients did not experience cardiovascular disease during the follow-up period, and 185 patients did. Conversely, the training set consisted of 1,777 patients, also from the Framingham dataset, with 417 patients having developed cardiovascular disease during the follow-up period and 1,360 not having the condition occur. This division ensures a balanced representation of both outcomes -- occurrence and non-occurrence of cardiovascular disease during the follow-up period -- in both the training and testing datasets.
 
 ```{r,echo=FALSE}
 train_set$D_test = 0
@@ -364,6 +362,78 @@ test_dataset$BPMEDS = as.factor(test_dataset$BPMEDS)
 test_dataset$S_i = as.factor(test_dataset$S_i)
 ```
 
+```{r,echo=FALSE}
+test_dataset_men = test_dataset %>% filter(SEX == 1)
+test_dataset_women = test_dataset %>% filter(SEX == 2)
+```
+
+
+```{r,echo=FALSE}
+logit_weights_men = glm(S_i ~ log(HDLC)+log(TOTCHOL)+log(AGE)+log(SYSBP_UT+1)+
+                 log(SYSBP_T+1)+CURSMOKE+DIABETES, data= test_dataset_men[-c(1,2,14)], family= "binomial")
+
+inverse_weights_train_men <- 1/(exp(predict(logit_weights_men, 
+                                                   newdata = test_dataset_men[-c(1,2,14)])))
+```
+
+
+```{r,echo=FALSE}
+test_set$CURSMOKE = as.factor(test_set$CURSMOKE)
+test_set$DIABETES = as.factor(test_set$DIABETES)
+```
+
+```{r,echo=FALSE}
+test_set_men = test_set %>% filter(SEX == 1)
+```
+
+
+```{r,echo=FALSE}
+g_X_men <- ifelse(predict(mod_men, 
+                        newdata = test_set_men, type = "response") > 0.5, 1, 0)
+
+pred_weights_men <- predict(logit_weights_men, newdata=test_set_men %>% dplyr::select(-'CVD'))
+
+inverse_weights_test_men <- 1/(exp(pred_weights_men))
+
+brier_score_df_men <- data.frame(CVD = test_set_men$CVD, g_X = g_X_men, 
+                                      inverse_weights_test_men =inverse_weights_test_men) 
+
+brier_score_df_men$numerator <- (brier_score_df_men$CVD
+                                        -brier_score_df_men$g_X)^2*brier_score_df_men$inverse_weights_test_men
+
+brier_score_men <- sum(brier_score_df_men$numerator)/nrow(test_dataset_men)
+```
+
+```{r,echo=FALSE}
+logit_weights_women = glm(S_i ~ log(HDLC)+log(TOTCHOL)+log(AGE)+log(SYSBP_UT+1)+
+                 log(SYSBP_T+1)+CURSMOKE+DIABETES, data= test_dataset_women[-c(1,2,14)], family= "binomial")
+
+inverse_weights_train_women <- 1/(exp(predict(logit_weights_men, 
+                                                   newdata = test_dataset_women[-c(1,2,14)])))
+```
+
+```{r,echo=FALSE}
+test_set_women = test_set %>% filter(SEX == 2)
+```
+
+```{r,echo=FALSE}
+g_X_women <- ifelse(predict(mod_women, 
+                        newdata = test_set_women, type = "response") > 0.5, 1, 0)
+
+pred_weights_women <- predict(logit_weights_women, newdata=test_set_women %>% dplyr::select(-'CVD'))
+
+inverse_weights_test_women <- 1/(exp(pred_weights_women))
+
+brier_score_df_women <- data.frame(CVD = test_set_women$CVD, g_X = g_X_women, 
+                                      inverse_weights_test_women =inverse_weights_test_women) 
+
+brier_score_df_women$numerator <- (brier_score_df_women$CVD
+                                        -brier_score_df_women$g_X)^2*brier_score_df_women$inverse_weights_test_women
+
+brier_score_women <- sum(brier_score_df_women$numerator)/nrow(test_dataset_women)
+```
+
+
 ```{r,echo=FALSE,warning=FALSE,message=FALSE}
 temp_model = glm(S_i ~., 
                  data = test_dataset[,-c(1,14,13,12)], family = "binomial")
@@ -402,21 +472,73 @@ denominator_value = denominator_value[1]
 Brier_risk = numerator_value/denominator_value
 ```
 
+
 ### Brier score (MSE for binary outcome)
 
 Let $Y$ represent the outcome and $X$ the set of covariates. We define $S$ as the population indicator, where $S=1$ for the source dataset and $S=0$ for the target dataset. The function $g(X)$ denotes the prediction model for the probability $\text{Pr}[Y=1|X,D=0]$. Additionally, $D$ serves as an indicator of the dataset's division into the test set ($D=1$) and the training set ($D=0$). The estimated Brier risk for the target population is calculated using the following formula: $$
 \hat{\psi}_{\hat{\beta}} = \frac{\sum^n_{i=1} I(S_i=1, D_{\text{test,i}} = 1) \hat{o}(X_i) (Y_i - g_{\hat{\beta}}(X_i))^2}{\sum^n_{i=1} I(S_i =0, D_{\text{test,i}} = 0)}
 $$ Here, $\hat{o}(X)$ is the estimator for the inverse-odds weighting in the test set, defined as $\frac{\text{Pr}[S=0|X,D_{\text{test}}=1]}{\text{Pr}[S=1|X,D_{\text{test}}=1]}$. This component adjusts the Brier risk calculation to account for the distributional differences between the source and target populations within the test set, thereby facilitating a more accurate estimation of the model's predictive performance. [@steingrimsson2022]
 
-In our study, we constructed two separate predictive models for cardiovascular disease (CVD) risk, specifically tailored for men and women, using logistic regression. For the male population, the model was built using the train dataset which only contained male participants. The predictors included in this model are the natural logarithms of High-Density Lipoprotein Cholesterol (HDLC), Total Cholesterol (TOTCHOL), Age (AGE), untreated Systolic Blood Pressure (SYSBP_UT), and treated Systolic Blood Pressure (SYSBP_T). The model also includes binary variables for current smoking status (CURSMOKE) and diabetes status (DIABETES). The addition of 1 to the systolic blood pressure variables before taking the logarithm ensures computational stability by avoiding the logarithm of zero. Similarly, for the female population, the model was constructed using train dataset which only contained female participants. The same set of predictors was used to maintain consistency in evaluating CVD risk across genders. This approach facilitates a gender-specific assessment, acknowledging potential biological and physiological differences between men and women in CVD risk factors. Both models aim to estimate the probability of developing CVD based on these risk factors. By employing logistic regression, we quantify the odds of CVD occurrence as a function of the chosen predictors, enabling a nuanced understanding of how these factors contribute to CVD risk in different genders. This modeling approach is pivotal in identifying high-risk individuals and informing targeted preventive strategies.
+In our study, we constructed two separate predictive models for cardiovascular disease (CVD) risk, specifically tailored for men and women, using logistic regression. For the male population, the model was built using the train dataset which only contained male participants. The predictors included in this model are the natural logarithms of High-Density Lipoprotein Cholesterol (HDLC), Total Cholesterol (TOTCHOL), Age (AGE), untreated Systolic Blood Pressure (SYSBP_UT), and treated Systolic Blood Pressure (SYSBP_T). The model also includes binary variables for current smoking status (CURSMOKE) and diabetes status (DIABETES). The addition of 1 to the systolic blood pressure variables before taking the logarithm ensures computational stability by avoiding the logarithm of zero. Similarly, for the female population, the model was constructed using train dataset which only contained female participants. The same set of predictors was used to maintain consistency in evaluating CVD risk across genders. This approach facilitates a gender-specific assessment, acknowledging potential biological and physiological differences between men and women in CVD risk factors. Both models aim to estimate the probability of developing CVD based on these risk factors. By employing logistic regression, we quantify the odds of CVD occurrence as a function of the chosen predictors, enabling a nuanced understanding of how these factors contribute to CVD risk in different genders. This modeling approach is pivotal in identifying high-risk individuals and informing targeted preventive strategies. 
+
+For Male:
+$$
+\text{logit(Pr(CVD))} = \beta_0 + \beta_1 \cdot \log(\text{HDLC}) + \beta_2 \cdot \log(\text{TOTCHOL}) + \beta_3 \cdot \log(\text{AGE}) + \beta_4 \cdot \log(\text{SYSBP UT} + 1) 
+$$
+$$
++ \beta_5 \cdot \log(\text{SYSBP T}+1) + \beta_6 \cdot \text{CURSMOKE} + \beta_7 \cdot \text{DIABETES}
+$$
+
+For Female: 
+$$
+\text{logit(Pr(CVD))} = \alpha_0 + \alpha_1 \cdot \log(\text{HDLC}) + \alpha_2 \cdot \log(\text{TOTCHOL}) + \alpha_3 \cdot \log(\text{AGE}) + \alpha_4 \cdot \log(\text{SYSBP UT} + 1) 
+$$
+$$
++ \alpha_5 \cdot \log(\text{SYSBP T}+1) + \alpha_6 \cdot \text{CURSMOKE} + \alpha_7 \cdot \text{DIABETES}
+$$
 
 A critical step involved calculating the inverse odds weights for the test dataset, which is a fundamental process in transportability analysis and other observational studies where sample selection bias might be a concern. The calculation was carried out through several stages using logistic regression and probability transformations. Initially, we fitted a logistic regression model, to the test dataset, excluding certain columns that were either outcome or collinear variable for this analysis. The model was specified to predict the binary variable $S_i$, which indicates whether an individual is part of the study sample or the target population. Upon fitting the model, we employed the predict function to compute the predicted probabilities of each individual being in the study sample ($S_i = 1$). This prediction was based on the covariates included in the logistic regression model. Subsequently, we transformed these probabilities into odds. The odds of an event is the probability of the event occurring divided by the probability of the event not occurring. This transformation was achieved using the $\text{formula odds} = \frac{\text{probability}}{(1 - \text{probability})}$. The final and crucial step involved calculating the inverse odds weights. These weights play a vital role in balancing the distribution of the covariates between the study sample and the target population, thereby mitigating selection bias. For individuals in the study sample ($S_i = 1$), the inverse odds weight was calculated as the reciprocal of the odds of being in the study sample. Conversely, for individuals in the target population ($S_i = 0$), the weight was calculated as the reciprocal of one minus the odds of being in the study sample. These weights are instrumental in subsequent statistical analyses, ensuring that the results are more representative of the target population.
-
-The Brier risk, commonly used to assess the accuracy of probabilistic predictions, is a measure of how well a predictive model performs. It is particularly useful in evaluating models that output probabilities for binary outcomes. The Brier score ranges from 0 to 1, with lower values indicating better prediction accuracy. A Brier score of 0 means perfect prediction, while a score of 1 indicates the worst possible prediction.[@steyerberg2010] The Brier score (or Brier risk) between the NHANES and Framingham datasets is 0.6191495. A Brier score of approximately 0.62 suggests a moderate to high level of error in the probabilistic predictions made by the model. This indicates that the predicted probabilities diverge significantly from the actual outcomes. 
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+BrierScore_dataset = cbind(brier_score_women, brier_score_men)
+BrierScore_dataset = as.data.frame(BrierScore_dataset)
+BrierScore_dataset %>%
+  mutate_all(linebreak) %>%
+  kbl(caption = "Estimated Brier Score in the NHANES Dataset",
+      col.names=linebreak(c("Brier score for women", "Brier score for men")),
+      booktabs=T, escape=F, align = "c") %>%
+kable_styling(full_width = FALSE, latex_options = c('hold_position'))
+```
+The Brier risk, commonly used to assess the accuracy of probabilistic predictions, is a measure of how well a predictive model performs. It is particularly useful in evaluating models that output probabilities for binary outcomes. The Brier score ranges from 0 to 1, with lower values indicating better prediction accuracy. A Brier score of 0 means perfect prediction, while a score of 1 indicates the worst possible prediction.[@steyerberg2010] For women, the Brier score is estimated at 0.0509048, while for men, it is slightly higher at 0.0930277. This differential suggests that the predictive model is more accurate for women than for men within this dataset. The lower score for women implies that the predictions made by the model are closer to the actual outcomes as compared to those made for men. This could be due to a variety of factors, such as differences in the variability of the outcomes being predicted, the distribution of predictive factors between genders, or potentially a model that is better tuned to the characteristics present in the female subset of the NHANES dataset.
 
 ## Simulated transportability analysis
 
-In order to simulate the \texttt{NHANES} dataset, we decided to generate all continuous variable (i.e., TOTCHOL, AGE, SYSBP, DIABP, HDLC, and BMI) follow to multivariate normal distribution. The covariance matrix ($\Sigma$) of these continuous variables from the \texttt{NHANES} dataset is meticulously computed. This matrix is crucial as it encapsulates the variance of each individual variable and the covariance amongst them, effectively preserving the inter-variable relationships observed in the original dataset. For this purpose, we consider each continuous variable ($X_{\text{continous}, i}$) as a random variable distributed according to a multivariate normal distribution, formally denoted as $\boldsymbol{X} \sim \mathcal{N}(\boldsymbol{\mu}, \Sigma)$, where $\boldsymbol{\mu}$ represents the mean vector and $\Sigma$ the covariance matrix. In our approach to Bernoulli variables, we generated these variables independently, rather than conditioning them on other variables. Specifically, \texttt{CURSMOKE}, \texttt{DIABETES}, \texttt{BPMEDS}, and \texttt{SEX} were each generated following a Bernoulli distribution. The probabilities for these distributions were determined based on the summary data presented in Table 3. This approach ensures that each variable is treated as a distinct entity, not influenced by the values of the others in the dataset. This disadvantage could be improved in further work.
+In order to simulate the \texttt{NHANES} dataset, we decided to generate all continuous variable (i.e., TOTCHOL, AGE, SYSBP, DIABP, HDLC, and BMI) follow to multivariate normal distribution. The covariance matrix ($\Sigma$) of these continuous variables from the \texttt{NHANES} dataset is meticulously computed. This matrix is crucial as it encapsulates the variance of each individual variable and the covariance amongst them, effectively preserving the inter-variable relationships observed in the original dataset. 
+
+
+Based on the information provided from the analysis of plot 1 and plot 2, it is evident that the variable `AGE` exhibits a uniform distribution for both male and female groups within the Framingham dataset. Specifically, the distribution of `AGE` for females ranges uniformly between 44 and 81 years, whereas for males, the uniform distribution ranges between 45 and 79 years. The variables `TOTCHOL` (total cholesterol), `HDLC` (high-density lipoprotein cholesterol), and `SYSBP` (systolic blood pressure) demonstrate a significant right-skewed distribution. A right-skewed distribution is characterized by a longer tail on the right side, indicating that a minority of higher values stretches out to the right, away from the majority of the data points. Given the right-skewed nature of these distributions, it is appropriate to consider gamma distributions to model `TOTCHOL`, `HDLC`, and `SYSBP`. 
+
+For the female cohort, systolic blood pressure is best modeled by a gamma distribution with a shape parameter of 36.260031 and a scale parameter of 3.859235 (\textit{i.e.,} $\Gamma(36.260031,3.859235)$). In contrast, the male cohort's systolic blood pressure follows a gamma distribution with a slightly higher shape parameter of 46.21877 and a lower scale of 3.00623 (\textit{i.e.,} $\Gamma(46.21877,3.00623)$), indicating a more pronounced right-skewness compared to females. When considering total cholesterol levels, the female group is characterized by a gamma distribution with a shape of 30.674790 and scale of 8.029993 (\textit{i.e.,} $\Gamma(30.674790,8.029993)$), whereas the male group displays a similar shape parameter at 30.372507 but with a smaller scale parameter of 7.455566 (\textit{i.e.,} $\Gamma(30.372507, 7.455566)$). This suggests that while the concentration and variability of total cholesterol are somewhat similar between genders, the male distribution is slightly more concentrated around the mean.
+
+For HDLC, the female gamma distribution is defined by a shape parameter of 12.051925 and a scale parameter of 4.403724 ( \textit{i.e.,} $\Gamma(12.051925, 4.403724)$), indicating a certain degree of right-skewness. The male HDLC levels, however, are modeled by a gamma distribution with a slightly lower shape parameter of 10.936868 and a scale parameter of 3.989408 ( \textit{i.e.,} $\Gamma(10.936868, 3.989408)$), suggesting a narrower and more skewed distribution than that of females.
+
+```{r,echo=FALSE}
+mlgamma <- function(x) {
+  fit <- dglm(
+    x~1, 
+    family=Gamma(link="log"), 
+    mustart=mean(x)
+  )
+  mu <- exp(fit$coefficients)
+  shape <- exp(-fit$dispersion.fit$coefficients)
+  scale <- mu/shape
+  result <- c(shape, scale)
+  names(result) <- c("shape", "scale")
+  result
+}
+```
+
+
+For this purpose, we consider each continuous variable ($X_{\text{continous}, i}$) as a random variable distributed according to a multivariate normal distribution, formally denoted as $\boldsymbol{X} \sim \mathcal{N}(\boldsymbol{\mu}, \Sigma)$, where $\boldsymbol{\mu}$ represents the mean vector and $\Sigma$ the covariance matrix for framingham dataset. In our approach to Bernoulli variables, we generated these variables independently, rather than conditioning them on other variables. Specifically, \texttt{CURSMOKE}, \texttt{DIABETES}, \texttt{BPMEDS}, and \texttt{SEX} were each generated following a Bernoulli distribution. The probabilities for these distributions were determined based on the summary data presented in Table 3. This approach ensures that each variable is treated as a distinct entity, not influenced by the values of the others in the dataset. This disadvantage could be improved in further work.
 
 ```{r,echo=FALSE}
 continous_nhanes = df_2017 %>% dplyr::select(-c(CVD, SEX, CURSMOKE, DIABETES, BPMEDS, SYSBP_UT,SYSBP_T))
@@ -543,9 +665,11 @@ temp_denominator_value = temp_denominator_value[1]
 ```{r,echo=FALSE}
 simulated_brier_risk = temp_numerator_value/temp_denominator_value
 ```
+
 The calculation of the Brier risk was conducted using the same methodology as previously applied in the comparison between the Framingham and NHANES datasets. The brier risk between the framinghan and simulated dataset is 0.5337068. This score, which is lower than the NHANES comparison but still above 0, indicates a moderate level of prediction error when the model, likely developed using the Framingham data, is applied to the simulated dataset. The fact that the Brier score is lower than that for the NHANES dataset suggests that the simulated dataset may be more similar to the Framingham dataset in terms of key characteristics or risk factor distributions. This implies that the model is somewhat more transportable to the simulated dataset than to the NHANES dataset, but there's still a notable discrepancy, highlighting areas where the model could be improved or adjusted for better transportability.
 
 ## Conclusion
+
 Table 5 below offers a direct comparison of the two Brier scores. The higher brier score indicates a greater degree of inaccuracy in the model's predictions when applied to the NHANES dataset. In transportability analysis, this suggests significant challenges in applying the model developed from the Framingham dataset to the NHANES population. The differences in score could be attributed to variations in population characteristics, underlying health behaviors, socio-economic factors, or other environmental differences between the two cohorts.
 
 ```{r,echo=FALSE,message=FALSE,warning=FALSE}
@@ -558,6 +682,7 @@ BrierScore_dataset %>%
       booktabs=T, escape=F, align = "c") %>%
 kable_styling(full_width = FALSE, latex_options = c('hold_position'))
 ```
+
 These results demonstrate the challenges of transporting a risk prediction model from one population to another. The model shows better transportability to the simulated dataset than to the NHANES dataset, indicating that population-specific factors significantly impact model performance. The variance in Brier scores underscores the importance of understanding the underlying population dynamics and characteristics when attempting to apply a model developed in one context (Framingham) to another (NHANES or a simulated dataset). It highlights the need for caution in generalizing findings across different populations. For effective transportability, it may be necessary to recalibrate the model or incorporate additional variables that are relevant to the target population. This can help in aligning the model more closely with the specific health profiles and risk factors prevalent in the population to which the model is being transported. These insights are valuable in guiding future model development and modification efforts, ensuring that predictive models are not only accurate in their original context but also maintain their validity and reliability when applied to different populations.
 
 ## Further work
